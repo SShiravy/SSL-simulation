@@ -47,7 +47,7 @@
 # s_ssl.close()
 #-------------------------------------------------------------------
 import socket
-
+import ssl
 
 # get the hostname and initiate port
 host = socket.gethostname() # as both code(server and client) is running on same pc
@@ -57,14 +57,21 @@ client_socket = socket.socket()
 # connect to host address and port
 client_socket.connect((host,port))
 
+# wrap the socket in an SSL context
+context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+context.load_verify_locations('cert.pem')
+ssl_connection = context.wrap_socket(client_socket,server_hostname=host)
+# handshake
+ssl_connection.do_handshake()
+
 message = input('-->')
 # send message to server
-client_socket.send(message.encode())
+ssl_connection.send(message.encode())
 # recive message from server
-data = client_socket.recv(1024).decode()
+data = ssl_connection.recv(1024).decode()
 print(f'server response: {data}')
 
-client_socket.close()
+ssl_connection.close()
 print('\nconnection closed.')
 
 

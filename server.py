@@ -59,7 +59,7 @@
 #-------------------------------------------------------
 
 import socket
-
+import ssl
 # get the hostname and initiate port
 host = socket.gethostname()
 port = 4444
@@ -73,13 +73,21 @@ server_socket.listen()
 connection,address = server_socket.accept()
 print(f'server: connection from {str(address)}\n')
 
+# wrap the socket in an SSL context
+context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+context.load_cert_chain(certfile='cert.pem',keyfile='key.pem')
+ssl_connection = context.wrap_socket(connection,server_side=True)
+# perform handshake
+ssl_connection.do_handshake()
+
+
 # receive data stream. it won't accept data packet greater than 1024 bytes
-data = connection.recv(1024).decode()
+data = ssl_connection.recv(1024).decode()
 print(f'connected user says: {str(data)}')
 # send a message to client
-connection.send('server recive your data'.encode())
+ssl_connection.send('server recive your data'.encode())
 
-connection.close()
+ssl_connection.close()
 print('\nconnection closed.')
 
 
